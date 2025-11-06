@@ -1,38 +1,22 @@
-# Build stage
+# syntax=docker/dockerfile:1.4
+
 FROM golang:1.21-alpine AS builder
 
-# Change apk mirror to aliyun and install ca-certificates only (git removed)
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk add --no-cache ca-certificates
+RUN apk update && apk add --no-cache git ca-certificates
 
-# Set working directory
 WORKDIR /app
 
-# Copy go modules
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy source
 COPY . .
 
-# Build the binary
-RUN go build -o main .
+RUN go build -o /portfolio-go-htmx .
 
-# Final stage
-FROM alpine:latest
+FROM alpine:3.20
+RUN apk update && apk add --no-cache ca-certificates
+WORKDIR /
+COPY --from=builder /portfolio-go-htmx /portfolio-go-htmx
 
-# Install ca-certificates
-RUN apk add --no-cache ca-certificates
-
-# Set working directory
-WORKDIR /root/
-
-# Copy the binary from builder
-COPY --from=builder /app/main .
-
-# Expose port
 EXPOSE 8080
-
-# Run binary
-CMD ["./main"]
+ENTRYPOINT ["/portfolio-go-htmx"]
