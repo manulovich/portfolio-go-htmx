@@ -1,14 +1,17 @@
 # Start from the official Golang base image
 FROM golang:1.21-alpine
 
+# Install ca-certificates for TLS verification
+RUN apk add --no-cache ca-certificates
+
 # Set working directory inside the container
 WORKDIR /app
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
 
-# Download dependencies
-RUN go mod download
+# Update certificates and Download dependencies
+RUN update-ca-certificates && go mod download
 
 # Copy the rest of the source code
 COPY . .
