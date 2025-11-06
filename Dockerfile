@@ -10,7 +10,8 @@ WORKDIR /app
 # Copy go mod and sum files
 COPY go.mod go.sum ./
 
-# Update certificates and Download dependencies
+# Update certificates and Download dependencies with GOINSECURE to bypass TLS issue
+ENV GOINSECURE=github.com/valyala/fasthttp
 RUN update-ca-certificates && go mod download
 
 # Copy the rest of the source code
