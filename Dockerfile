@@ -1,27 +1,38 @@
-# Start from the official Golang base image
-FROM golang:1.21-alpine
+# Build stage
+FROM golang:1.21-alpine AS builder
 
 # Install ca-certificates for TLS verification
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates git
 
-# Set working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy go mod and sum files
+# Copy go modules
 COPY go.mod go.sum ./
 
-# Update certificates and Download dependencies with GOINSECURE to bypass TLS issue
-ENV GOINSECURE=github.com/valyala/fasthttp
-RUN update-ca-certificates && go mod download
+# Download dependencies
+RUN go mod download
 
-# Copy the rest of the source code
+# Copy source
 COPY . .
 
-# Build the Go app
+# Build the binary
 RUN go build -o main .
 
-# Expose the port the app runs on
+# Final stage
+FROM alpine:latest
+
+# Install ca-certificates
+RUN apk add --no-cache ca-certificates
+
+# Set working directory
+WORKDIR /root/
+
+# Copy the binary from builder
+COPY --from=builder /app/main .
+
+# Expose port
 EXPOSE 8080
 
-# Command to run the executable
+# Run binary
 CMD ["./main"]
