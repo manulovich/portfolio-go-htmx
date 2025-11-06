@@ -1,8 +1,8 @@
 # Build stage
 FROM golang:1.21-alpine AS builder
 
-# Install ca-certificates for TLS verification
-RUN apk add --no-cache ca-certificates git
+# Change apk mirror to aliyun and install ca-certificates only (git removed)
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk add --no-cache ca-certificates
 
 # Set working directory
 WORKDIR /app
